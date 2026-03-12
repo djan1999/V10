@@ -47,9 +47,9 @@ const waterStyle = v => {
 };
 
 // ── Pairings ──────────────────────────────────────────────────────────────────
-const PAIRINGS = ["Non-Alc", "Wine", "Premium", "Our Story"];
+const PAIRINGS = ["Wine", "Non-Alc", "Premium", "Our Story"];
 const pairingStyle = {
-  "Non-Alc":  { color: "#666",    border: "#e8e8e8",   bg: "#fafafa" },
+  "Non-Alc":  { color: "#1f5f73", border: "#7fc6db88", bg: "#7fc6db12" },
   "Wine":      { color: "#8a6030", border: "#c8a06088", bg: "#c8a06008" },
   "Premium":   { color: "#5a5a8a", border: "#8888bb88", bg: "#8888bb08" },
   "Our Story": { color: "#3a7a5a", border: "#5aaa7a88", bg: "#5aaa7a08" },
@@ -80,7 +80,7 @@ const makeSeats = (n, ex = []) =>
     glasses:   ex[i]?.glasses   ?? [],
     cocktails: ex[i]?.cocktails ?? [],
     spirits:   ex[i]?.spirits   ?? [],
-    pairing:   ex[i]?.pairing   ?? "Non-Alc",
+    pairing:   ex[i]?.pairing   ?? "",
     extras:    ex[i]?.extras    ?? {},
   }));
 
@@ -632,7 +632,6 @@ function ReservationModal({ table, onSave, onClose }) {
   const isMobile = useIsMobile(700);
   const [name, setName]           = useState(table.resName || "");
   const [time, setTime]           = useState(table.resTime || "");
-  const [arrivedAt, setArrivedAt] = useState(table.arrivedAt || "");
   const [menuType, setMenuType]   = useState(table.menuType || "");
   const [guests, setGuests]       = useState(table.guests || 2);
   const [guestType, setGuestType] = useState(table.guestType || "");
@@ -686,22 +685,8 @@ function ReservationModal({ table, onSave, onClose }) {
               ))}
             </div>
           </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16 }}>
-            <div>
-              <div style={fieldLabel}>Arrival Time</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8 }}>
-                <input value={arrivedAt} onChange={e => setArrivedAt(e.target.value)} placeholder="19:12" style={baseInp} />
-                <button onClick={() => setArrivedAt(fmt(new Date()))} style={{
-                  fontFamily: FONT, fontSize: 10, letterSpacing: 1, padding: "0 14px",
-                  border: "1px solid #e8e8e8", borderRadius: 2, cursor: "pointer",
-                  background: "#fff", color: "#1a1a1a",
-                }}>NOW</button>
-              </div>
-            </div>
-
-            <div>
-              <div style={fieldLabel}>Menu</div>
+          <div>
+            <div style={fieldLabel}>Menu</div>
               <div style={{ display: "flex", gap: 8 }}>
                 {["Long", "Short"].map(opt => (
                   <button key={opt} onClick={() => setMenuType(m => m === opt ? "" : opt)} style={{
@@ -715,7 +700,6 @@ function ReservationModal({ table, onSave, onClose }) {
                   }}>{opt}</button>
                 ))}
               </div>
-            </div>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "120px 1fr", gap: 16, alignItems: "flex-start" }}>
@@ -818,7 +802,7 @@ function ReservationModal({ table, onSave, onClose }) {
             flex: 1, fontFamily: FONT, fontSize: 12, letterSpacing: 2,
             padding: "14px", border: "1px solid #e8e8e8", borderRadius: 2, cursor: "pointer", background: "#fff", color: "#444",
           }}>CANCEL</button>
-          <button onClick={() => onSave({ name, time, arrivedAt, menuType, guests, guestType, room, birthday, restrictions, notes })} style={{
+          <button onClick={() => onSave({ name, time, menuType, guests, guestType, room, birthday, restrictions, notes })} style={{
             flex: 2, fontFamily: FONT, fontSize: 12, letterSpacing: 2,
             padding: "14px", border: "1px solid #1a1a1a", borderRadius: 2, cursor: "pointer", background: "#1a1a1a", color: "#fff",
           }}>SAVE</button>
@@ -875,7 +859,7 @@ function Card({ table, mode, onClick, onSeat, onClear, onEditRes }) {
             {table.seats.map(s => (
               <div key={s.id} style={{
                 width: 7, height: 7, borderRadius: "50%",
-                background: s.pairing === "Non-Alc" ? "#e8e8e8" : pairingStyle[s.pairing].color,
+                background: s.pairing ? (pairingStyle[s.pairing]?.color || "#e8e8e8") : "#e8e8e8",
               }} />
             ))}
           </div>
@@ -1049,13 +1033,18 @@ function Detail({ table, dishes, wines = [], cocktails = [], spirits = [], mode,
             <div style={{ paddingLeft: isMobile ? 0 : 48, display: "flex", flexDirection: "column", gap: 14 }}>
               <div style={{
                 display: "grid",
-                gridTemplateColumns: isMobile ? "1fr" : "repeat(3, minmax(0, 1fr))",
+                gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
                 gap: 12,
                 alignItems: "start",
               }}>
                 {/* By glass — wines */}
                 <div style={{ minWidth: 0, border: "1px solid #e4e4e4", borderRadius: 8, padding: "10px 10px 8px", background: "#fcfcfc" }}>
-                  <div style={{ ...fieldLabel, marginBottom: 8, color: "#555" }}>By Glass</div>
+                  <div style={{ ...fieldLabel, marginBottom: 6, color: "#555" }}>By Glass</div>
+                  <button onClick={() => updSeat(seat.id, "glasses", [...glasses, null])} style={{
+                    fontFamily: FONT, fontSize: 9, letterSpacing: 1, padding: "5px 10px",
+                    border: "1px dashed #d8d8d8", borderRadius: 6, cursor: "pointer",
+                    background: "#fff", color: "#555", marginBottom: 8, width: "100%",
+                  }}>+ add glass</button>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {glasses.map((w, gi) => (
                       <div key={gi} style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -1071,17 +1060,17 @@ function Detail({ table, dishes, wines = [], cocktails = [], spirits = [], mode,
                         }}>×</button>
                       </div>
                     ))}
-                    <button onClick={() => updSeat(seat.id, "glasses", [...glasses, null])} style={{
-                      fontFamily: FONT, fontSize: 9, letterSpacing: 1, padding: "5px 10px",
-                      border: "1px dashed #d8d8d8", borderRadius: 6, cursor: "pointer",
-                      background: "#fff", color: "#555", alignSelf: "flex-start",
-                    }}>+ add glass</button>
                   </div>
                 </div>
 
                 {/* Cocktails */}
                 <div style={{ minWidth: 0, border: "1px solid #eadff1", borderRadius: 8, padding: "10px 10px 8px", background: "#fcf9ff" }}>
-                  <div style={{ ...fieldLabel, marginBottom: 8, color: "#6f4d85" }}>Cocktail</div>
+                  <div style={{ ...fieldLabel, marginBottom: 6, color: "#6f4d85" }}>Cocktail</div>
+                  <button onClick={() => updSeat(seat.id, "cocktails", [...cocktailList, null])} style={{
+                    fontFamily: FONT, fontSize: 9, letterSpacing: 1, padding: "5px 10px",
+                    border: "1px dashed #dcc9ea", borderRadius: 6, cursor: "pointer",
+                    background: "#fff", color: "#7a507a", marginBottom: 8, width: "100%",
+                  }}>+ add cocktail</button>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {cocktailList.map((c, ci) => (
                       <div key={ci} style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -1097,17 +1086,17 @@ function Detail({ table, dishes, wines = [], cocktails = [], spirits = [], mode,
                         }}>×</button>
                       </div>
                     ))}
-                    <button onClick={() => updSeat(seat.id, "cocktails", [...cocktailList, null])} style={{
-                      fontFamily: FONT, fontSize: 9, letterSpacing: 1, padding: "5px 10px",
-                      border: "1px dashed #dcc9ea", borderRadius: 6, cursor: "pointer",
-                      background: "#fff", color: "#7a507a", alignSelf: "flex-start",
-                    }}>+ add cocktail</button>
                   </div>
                 </div>
 
                 {/* Spirits */}
                 <div style={{ minWidth: 0, border: "1px solid #eadfce", borderRadius: 8, padding: "10px 10px 8px", background: "#fffaf5" }}>
-                  <div style={{ ...fieldLabel, marginBottom: 8, color: "#8a6236" }}>Spirit</div>
+                  <div style={{ ...fieldLabel, marginBottom: 6, color: "#8a6236" }}>Spirit</div>
+                  <button onClick={() => updSeat(seat.id, "spirits", [...spiritList, null])} style={{
+                    fontFamily: FONT, fontSize: 9, letterSpacing: 1, padding: "5px 10px",
+                    border: "1px dashed #e5d3bb", borderRadius: 6, cursor: "pointer",
+                    background: "#fff", color: "#a07040", marginBottom: 8, width: "100%",
+                  }}>+ add spirit</button>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {spiritList.map((s, si2) => (
                       <div key={si2} style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -1123,11 +1112,6 @@ function Detail({ table, dishes, wines = [], cocktails = [], spirits = [], mode,
                         }}>×</button>
                       </div>
                     ))}
-                    <button onClick={() => updSeat(seat.id, "spirits", [...spiritList, null])} style={{
-                      fontFamily: FONT, fontSize: 9, letterSpacing: 1, padding: "5px 10px",
-                      border: "1px dashed #e5d3bb", borderRadius: 6, cursor: "pointer",
-                      background: "#fff", color: "#a07040", alignSelf: "flex-start",
-                    }}>+ add spirit</button>
                   </div>
                 </div>
               </div>
@@ -1175,6 +1159,33 @@ function Detail({ table, dishes, wines = [], cocktails = [], spirits = [], mode,
         <div>
           <div style={fieldLabel}>🍾 Bottle</div>
           <WineSearch wineObj={table.bottleWine} wines={wines} byGlass={false} placeholder="search bottle…" onChange={w => upd("bottleWine", w)} />
+        </div>
+        <div>
+          <div style={fieldLabel}>Arrival Time</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8 }}>
+            <input value={table.arrivedAt || ""} onChange={e => upd("arrivedAt", e.target.value)} placeholder="19:12" style={baseInp} />
+            <button onClick={() => upd("arrivedAt", fmt(new Date()))} style={{
+              fontFamily: FONT, fontSize: 10, letterSpacing: 1, padding: "0 14px",
+              border: "1px solid #e8e8e8", borderRadius: 2, cursor: "pointer",
+              background: "#fff", color: "#1a1a1a",
+            }}>NOW</button>
+          </div>
+        </div>
+        <div>
+          <div style={fieldLabel}>Menu</div>
+          <div style={{ display: "flex", gap: 8 }}>
+            {["Long", "Short"].map(opt => (
+              <button key={opt} onClick={() => upd("menuType", table.menuType === opt ? "" : opt)} style={{
+                fontFamily: FONT, fontSize: 11, letterSpacing: 1,
+                padding: "12px 0", flex: 1, border: "1px solid",
+                borderColor: table.menuType === opt ? "#1a1a1a" : "#e8e8e8",
+                borderRadius: 2, cursor: "pointer",
+                background: table.menuType === opt ? "#1a1a1a" : "#fff",
+                color: table.menuType === opt ? "#fff" : "#444",
+                textTransform: "uppercase",
+              }}>{opt}</button>
+            ))}
+          </div>
         </div>
         <div>
           <div style={fieldLabel}>⚠️ Restrictions</div>
@@ -1247,7 +1258,7 @@ function DisplayBoard({ tables, dishes }) {
   }, [tables]);
 
   const pairingColors = {
-    "Non-Alc":  { color: "#666",    bg: "#f0f0f0",  border: "#d8d8d8" },
+    "Non-Alc":  { color: "#1f5f73", bg: "#e8f7fb",  border: "#7fc6db" },
     "Wine":      { color: "#7a5020", bg: "#f5ead8",  border: "#c8a060" },
     "Premium":   { color: "#3a3a7a", bg: "#eaeaf5",  border: "#8888bb" },
     "Our Story": { color: "#2a6a4a", bg: "#e0f5ea",  border: "#5aaa7a" },
@@ -1321,7 +1332,7 @@ function DisplayBoard({ tables, dishes }) {
                   color: seat.water === "—" ? "#666" : "#1a1a1a",
                   border: "1px solid #e0e0e0",
                 }}>{seat.water}</span>
-                {seat.pairing && seat.pairing !== "Non-Alc" && (
+                {seat.pairing && (
                   <span style={{
                     fontFamily: FONT, fontSize: 11, fontWeight: 500, letterSpacing: 0.5,
                     padding: "4px 10px", borderRadius: 2,
@@ -1798,9 +1809,9 @@ export default function App() {
     })};
   }));
 
-  const saveRes = (id, { name, time, arrivedAt, menuType, guests, guestType, room, birthday, restrictions, notes }) => {
+  const saveRes = (id, { name, time, menuType, guests, guestType, room, birthday, restrictions, notes }) => {
     setTables(p => p.map(t =>
-      t.id !== id ? t : { ...t, resName: name, resTime: time, arrivedAt, menuType, guestType, room, guests, seats: makeSeats(guests, t.seats), birthday, restrictions, notes }
+      t.id !== id ? t : { ...t, resName: name, resTime: time, menuType, guestType, room, guests, seats: makeSeats(guests, t.seats), birthday, restrictions, notes }
     ));
     setResModal(null);
   };
