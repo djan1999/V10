@@ -895,6 +895,8 @@ function Card({ table, mode, onClick, onSeat, onClear, onEditRes }) {
 function Detail({ table, dishes, wines = [], cocktails = [], spirits = [], mode, onBack, upd, updSeat, setGuests, swapSeats }) {
   const isMobile = useIsMobile(860);
   const row1 = isMobile ? "34px 68px 1fr 28px" : "38px 75px 1fr 28px";
+  const [activeDrinkTab, setActiveDrinkTab] = useState({});
+  const getDrinkTab = (seatId) => activeDrinkTab[seatId] || "glass";
 
   return (
     <div style={{ maxWidth: 860, margin: "0 auto", padding: isMobile ? "20px 12px 28px" : "24px 16px", overflowX: "hidden" }}>
@@ -1029,93 +1031,97 @@ function Detail({ table, dishes, wines = [], cocktails = [], spirits = [], mode,
                 ? <SwapPicker seatId={seat.id} totalSeats={table.seats.length} onSwap={t => swapSeats(seat.id, t)} />
                 : <div />}
             </div>
-            {/* ── Line 2: Drinks / Pairings / Extras ── */}
+            {/* ── Line 2: Drinks / Extras ── */}
             <div style={{ paddingLeft: isMobile ? 0 : 48, display: "flex", flexDirection: "column", gap: 14 }}>
               <div style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                gap: 12,
-                alignItems: "start",
+                border: "1px solid #ececec",
+                borderRadius: 10,
+                background: "#fcfcfc",
+                padding: isMobile ? "10px" : "12px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
               }}>
-                {/* By glass — wines */}
-                <div style={{ minWidth: 0, border: "1px solid #e4e4e4", borderRadius: 8, padding: "10px 10px 8px", background: "#fcfcfc" }}>
-                  <div style={{ ...fieldLabel, marginBottom: 6, color: "#555" }}>By Glass</div>
-                  <button onClick={() => updSeat(seat.id, "glasses", [...glasses, null])} style={{
-                    fontFamily: FONT, fontSize: 9, letterSpacing: 1, padding: "5px 10px",
-                    border: "1px dashed #d8d8d8", borderRadius: 6, cursor: "pointer",
-                    background: "#fff", color: "#555", marginBottom: 8, width: "100%",
-                  }}>+ add glass</button>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    {glasses.map((w, gi) => (
-                      <div key={gi} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <WineSearch wineObj={w} wines={wines} byGlass={true} compact placeholder="search glass…"
-                            onChange={updated => {
-                              const next = glasses.map((x, idx) => idx === gi ? updated : x).filter(Boolean);
-                              updSeat(seat.id, "glasses", next);
-                            }} />
-                        </div>
-                        <button onClick={() => updSeat(seat.id, "glasses", glasses.filter((_, idx) => idx !== gi))} style={{
-                          background: "none", border: "none", color: "#888", cursor: "pointer", fontSize: 16, lineHeight: 1, padding: "0 2px", flexShrink: 0,
-                        }}>×</button>
-                      </div>
-                    ))}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                  <div style={{ ...fieldLabel, marginBottom: 0, color: "#444" }}>Beverages</div>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {[
+                      { key: "glass", label: "By Glass", color: "#555", border: "#dedede", bg: "#ffffff" },
+                      { key: "cocktail", label: "Cocktail", color: "#7a507a", border: "#dcc9ea", bg: "#fcf9ff" },
+                      { key: "spirit", label: "Spirit", color: "#a07040", border: "#e5d3bb", bg: "#fffaf5" },
+                    ].map(tab => {
+                      const on = getDrinkTab(seat.id) === tab.key;
+                      return (
+                        <button key={tab.key} onClick={() => setActiveDrinkTab(prev => ({ ...prev, [seat.id]: tab.key }))} style={{
+                          fontFamily: FONT, fontSize: 9, letterSpacing: 1, padding: "6px 10px",
+                          border: "1px solid", borderColor: on ? tab.border : "#e8e8e8", borderRadius: 999,
+                          cursor: "pointer", background: on ? tab.bg : "#fff", color: on ? tab.color : "#555",
+                          fontWeight: on ? 600 : 500,
+                        }}>{tab.label}</button>
+                      );
+                    })}
                   </div>
                 </div>
 
-                {/* Cocktails */}
-                <div style={{ minWidth: 0, border: "1px solid #eadff1", borderRadius: 8, padding: "10px 10px 8px", background: "#fcf9ff" }}>
-                  <div style={{ ...fieldLabel, marginBottom: 6, color: "#6f4d85" }}>Cocktail</div>
-                  <button onClick={() => updSeat(seat.id, "cocktails", [...cocktailList, null])} style={{
-                    fontFamily: FONT, fontSize: 9, letterSpacing: 1, padding: "5px 10px",
-                    border: "1px dashed #dcc9ea", borderRadius: 6, cursor: "pointer",
-                    background: "#fff", color: "#7a507a", marginBottom: 8, width: "100%",
-                  }}>+ add cocktail</button>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    {cocktailList.map((c, ci) => (
-                      <div key={ci} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <DrinkSearch drinkObj={c} list={cocktails} accentColor="#7a507a" placeholder="search cocktail…"
-                            onChange={updated => {
-                              const next = cocktailList.map((x, idx) => idx === ci ? updated : x).filter(Boolean);
-                              updSeat(seat.id, "cocktails", next);
-                            }} />
-                        </div>
-                        <button onClick={() => updSeat(seat.id, "cocktails", cocktailList.filter((_, idx) => idx !== ci))} style={{
-                          background: "none", border: "none", color: "#888", cursor: "pointer", fontSize: 16, lineHeight: 1, padding: "0 2px", flexShrink: 0,
-                        }}>×</button>
-                      </div>
-                    ))}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <div style={{ flex: 1, minWidth: isMobile ? "100%" : 260 }}>
+                    {getDrinkTab(seat.id) === "glass" ? (
+                      <WineSearch wineObj={null} wines={wines} byGlass={true} compact={false} placeholder="search by glass…"
+                        onChange={updated => { if (!updated) return; updSeat(seat.id, "glasses", [...glasses, updated]); }} />
+                    ) : getDrinkTab(seat.id) === "cocktail" ? (
+                      <DrinkSearch drinkObj={null} list={cocktails} accentColor="#7a507a" placeholder="search cocktail…"
+                        onChange={updated => { if (!updated) return; updSeat(seat.id, "cocktails", [...cocktailList, updated]); }} />
+                    ) : (
+                      <DrinkSearch drinkObj={null} list={spirits} accentColor="#a07040" placeholder="search spirit…"
+                        onChange={updated => { if (!updated) return; updSeat(seat.id, "spirits", [...spiritList, updated]); }} />
+                    )}
+                  </div>
+                  <div style={{ fontFamily: FONT, fontSize: 10, color: "#666", letterSpacing: 0.5 }}>
+                    {getDrinkTab(seat.id) === "glass" ? "Adds to by-glass" : getDrinkTab(seat.id) === "cocktail" ? "Adds to cocktails" : "Adds to spirits"}
                   </div>
                 </div>
 
-                {/* Spirits */}
-                <div style={{ minWidth: 0, border: "1px solid #eadfce", borderRadius: 8, padding: "10px 10px 8px", background: "#fffaf5" }}>
-                  <div style={{ ...fieldLabel, marginBottom: 6, color: "#8a6236" }}>Spirit</div>
-                  <button onClick={() => updSeat(seat.id, "spirits", [...spiritList, null])} style={{
-                    fontFamily: FONT, fontSize: 9, letterSpacing: 1, padding: "5px 10px",
-                    border: "1px dashed #e5d3bb", borderRadius: 6, cursor: "pointer",
-                    background: "#fff", color: "#a07040", marginBottom: 8, width: "100%",
-                  }}>+ add spirit</button>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    {spiritList.map((s, si2) => (
-                      <div key={si2} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <DrinkSearch drinkObj={s} list={spirits} accentColor="#a07040" placeholder="search spirit…"
-                            onChange={updated => {
-                              const next = spiritList.map((x, idx) => idx === si2 ? updated : x).filter(Boolean);
-                              updSeat(seat.id, "spirits", next);
-                            }} />
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, minmax(0, 1fr))", gap: 10 }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ ...fieldLabel, marginBottom: 6, color: "#444" }}>By Glass</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {glasses.length === 0 ? <div style={{ fontFamily: FONT, fontSize: 11, color: "#777", padding: "8px 10px", border: "1px dashed #e2e2e2", borderRadius: 8 }}>none</div> : glasses.map((w, gi) => (
+                        <div key={gi} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 9px", border: "1px solid #e2e2e2", borderRadius: 8, background: "#fff" }}>
+                          <div style={{ width: 8, alignSelf: "stretch", borderRadius: 999, background: "#d8d8d8", flexShrink: 0 }} />
+                          <div style={{ flex: 1, minWidth: 0, fontFamily: FONT, fontSize: 11, color: "#1a1a1a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{w?.name} · {w?.producer} · {w?.vintage}</div>
+                          <button onClick={() => updSeat(seat.id, "glasses", glasses.filter((_, idx) => idx !== gi))} style={{ background: "none", border: "none", color: "#777", cursor: "pointer", fontSize: 16, lineHeight: 1, padding: 0 }}>×</button>
                         </div>
-                        <button onClick={() => updSeat(seat.id, "spirits", spiritList.filter((_, idx) => idx !== si2))} style={{
-                          background: "none", border: "none", color: "#888", cursor: "pointer", fontSize: 16, lineHeight: 1, padding: "0 2px", flexShrink: 0,
-                        }}>×</button>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ ...fieldLabel, marginBottom: 6, color: "#6f4d85" }}>Cocktail</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {cocktailList.length === 0 ? <div style={{ fontFamily: FONT, fontSize: 11, color: "#7f7090", padding: "8px 10px", border: "1px dashed #dcc9ea", borderRadius: 8, background: "#fcf9ff" }}>none</div> : cocktailList.map((c, ci) => (
+                        <div key={ci} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 9px", border: "1px solid #e5d7f0", borderRadius: 8, background: "#fcf9ff" }}>
+                          <div style={{ width: 8, alignSelf: "stretch", borderRadius: 999, background: "#cfaee2", flexShrink: 0 }} />
+                          <div style={{ flex: 1, minWidth: 0, fontFamily: FONT, fontSize: 11, color: "#1a1a1a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c?.name}{c?.notes ? ` · ${c.notes}` : ""}</div>
+                          <button onClick={() => updSeat(seat.id, "cocktails", cocktailList.filter((_, idx) => idx !== ci))} style={{ background: "none", border: "none", color: "#777", cursor: "pointer", fontSize: 16, lineHeight: 1, padding: 0 }}>×</button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ ...fieldLabel, marginBottom: 6, color: "#8a6236" }}>Spirit</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {spiritList.length === 0 ? <div style={{ fontFamily: FONT, fontSize: 11, color: "#8a6d4a", padding: "8px 10px", border: "1px dashed #e5d3bb", borderRadius: 8, background: "#fffaf5" }}>none</div> : spiritList.map((sp, si2) => (
+                        <div key={si2} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 9px", border: "1px solid #eadfce", borderRadius: 8, background: "#fffaf5" }}>
+                          <div style={{ width: 8, alignSelf: "stretch", borderRadius: 999, background: "#d8b48c", flexShrink: 0 }} />
+                          <div style={{ flex: 1, minWidth: 0, fontFamily: FONT, fontSize: 11, color: "#1a1a1a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sp?.name}{sp?.notes ? ` · ${sp.notes}` : ""}</div>
+                          <button onClick={() => updSeat(seat.id, "spirits", spiritList.filter((_, idx) => idx !== si2))} style={{ background: "none", border: "none", color: "#777", cursor: "pointer", fontSize: 16, lineHeight: 1, padding: 0 }}>×</button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
-
               {/* Extra dishes */}
               {dishes.length > 0 && (
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
@@ -1159,17 +1165,6 @@ function Detail({ table, dishes, wines = [], cocktails = [], spirits = [], mode,
         <div>
           <div style={fieldLabel}>🍾 Bottle</div>
           <WineSearch wineObj={table.bottleWine} wines={wines} byGlass={false} placeholder="search bottle…" onChange={w => upd("bottleWine", w)} />
-        </div>
-        <div>
-          <div style={fieldLabel}>Arrival Time</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8 }}>
-            <input value={table.arrivedAt || ""} onChange={e => upd("arrivedAt", e.target.value)} placeholder="19:12" style={baseInp} />
-            <button onClick={() => upd("arrivedAt", fmt(new Date()))} style={{
-              fontFamily: FONT, fontSize: 10, letterSpacing: 1, padding: "0 14px",
-              border: "1px solid #e8e8e8", borderRadius: 2, cursor: "pointer",
-              background: "#fff", color: "#1a1a1a",
-            }}>NOW</button>
-          </div>
         </div>
         <div>
           <div style={fieldLabel}>Menu</div>
@@ -1237,6 +1232,18 @@ function Detail({ table, dishes, wines = [], cocktails = [], spirits = [], mode,
 }
 
 
+function statusPill(isActive, label) {
+  return (
+    <span style={{
+      fontFamily: FONT, fontSize: 8, letterSpacing: 1, fontWeight: 700,
+      color: isActive ? "#2f7a45" : "#9a6a18",
+      border: `1px solid ${isActive ? "#9bd0aa" : "#e8d8b8"}`,
+      background: isActive ? "#ecf8ef" : "#fff8ea",
+      borderRadius: 999, padding: "3px 8px"
+    }}>{label}</span>
+  );
+}
+
 // ── Display Board ─────────────────────────────────────────────────────────────
 function DisplayBoard({ tables, dishes }) {
   const [sel, setSel]       = useState(null);   // desktop: selected table id
@@ -1298,75 +1305,58 @@ function DisplayBoard({ tables, dishes }) {
         </div>
       )}
 
-      {/* Seat rows */}
-      {table.seats.map((seat, si) => {
+      {/* Seat cards */}
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
+      {table.seats.map((seat) => {
         const seatRestrictions = (table.restrictions || []).filter(r => r.pos === seat.id);
-        const seatExtras       = dishes.filter(d => seat.extras?.[d.id]?.ordered);
-        const ws  = waterStyle(seat.water);
-        const pc  = pairingColors[seat.pairing] || pairingColors["Non-Alc"];
+        const seatExtras = dishes.filter(d => seat.extras?.[d.id]?.ordered);
+        const ws = waterStyle(seat.water);
+        const pc = pairingColors[seat.pairing] || pairingColors["Non-Alc"];
         const hasInfo = seatRestrictions.length > 0 || seatExtras.length > 0;
 
         return (
-          <div key={seat.id} style={{
-            borderBottom: si < table.seats.length - 1 ? "1px solid #f0f0f0" : "none",
-            padding: "12px 0",
-            display: "flex", gap: 12, alignItems: "flex-start",
-          }}>
-            {/* P bubble */}
-            <div style={{
-              width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
-              border: `1px solid ${seatRestrictions.length ? "#e08080" : "#d0d0d0"}`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontFamily: FONT, fontSize: 10, fontWeight: 500,
-              color: seatRestrictions.length ? "#b04040" : "#555",
-            }}>P{seat.id}</div>
-
-            {/* Content */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
-              {/* Water + Pairing on one line */}
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <span style={{
-                  fontFamily: FONT, fontSize: 12, fontWeight: 500, letterSpacing: 1,
-                  padding: "4px 10px", borderRadius: 2, textAlign: "center",
-                  background: seat.water === "—" ? "#f5f5f5" : (ws.bg || "#f0f0f0"),
-                  color: seat.water === "—" ? "#666" : "#1a1a1a",
-                  border: "1px solid #e0e0e0",
-                }}>{seat.water}</span>
-                {seat.pairing && (
-                  <span style={{
-                    fontFamily: FONT, fontSize: 11, fontWeight: 500, letterSpacing: 0.5,
-                    padding: "4px 10px", borderRadius: 2,
-                    background: pc.bg, border: `1px solid ${pc.border}`, color: pc.color,
-                  }}>{seat.pairing}</span>
-                )}
+          <div key={seat.id} style={{ border: "1px solid #ececec", borderRadius: 10, padding: "12px", background: "#fff" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{
+                  width: 30, height: 30, borderRadius: "50%",
+                  border: `1px solid ${seatRestrictions.length ? "#e08080" : "#d0d0d0"}`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontFamily: FONT, fontSize: 10, fontWeight: 600,
+                  color: seatRestrictions.length ? "#b04040" : "#444",
+                }}>P{seat.id}</div>
+                <div style={{ ...fieldLabel, marginBottom: 0, color: "#555" }}>P{seat.id}</div>
               </div>
-
-              {/* Restrictions + extras */}
-              {hasInfo && (
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  {seatRestrictions.map((r, i) => (
-                    <span key={i} style={{
-                      fontFamily: FONT, fontSize: 11, fontWeight: 500, letterSpacing: 0.3,
-                      padding: "4px 9px", borderRadius: 2,
-                      background: "#fef0f0", border: "1px solid #e09090", color: "#b04040",
-                    }}>⚠ {r.note}</span>
-                  ))}
-                  {seatExtras.map(d => {
-                    const ex = seat.extras[d.id];
-                    return (
-                      <span key={d.id} style={{
-                        fontFamily: FONT, fontSize: 11, letterSpacing: 0.3,
-                        padding: "4px 9px", borderRadius: 2,
-                        background: "#e8f5e8", border: "1px solid #88cc88", color: "#2a6a2a",
-                      }}>{d.name}{ex.pairing && ex.pairing !== "—" ? ` · ${ex.pairing}` : ""}</span>
-                    );
-                  })}
-                </div>
-              )}
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                <span style={{
+                  fontFamily: FONT, fontSize: 11, fontWeight: 600, letterSpacing: 0.5,
+                  padding: "4px 10px", borderRadius: 999,
+                  background: seat.water === "—" ? "#f5f5f5" : (ws.bg || "#f0f0f0"),
+                  color: seat.water === "—" ? "#666" : "#1a1a1a", border: "1px solid #e0e0e0",
+                }}>{seat.water}</span>
+                {seat.pairing && <span style={{
+                  fontFamily: FONT, fontSize: 11, fontWeight: 600, letterSpacing: 0.4,
+                  padding: "4px 10px", borderRadius: 999,
+                  background: pc.bg, border: `1px solid ${pc.border}`, color: pc.color,
+                }}>{seat.pairing}</span>}
+              </div>
             </div>
+
+            {hasInfo ? (
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {seatRestrictions.map((r, i) => (
+                  <span key={i} style={{ fontFamily: FONT, fontSize: 11, fontWeight: 500, letterSpacing: 0.3, padding: "4px 9px", borderRadius: 999, background: "#fef0f0", border: "1px solid #e09090", color: "#b04040" }}>⚠ {r.note}</span>
+                ))}
+                {seatExtras.map(d => {
+                  const ex = seat.extras[d.id];
+                  return <span key={d.id} style={{ fontFamily: FONT, fontSize: 11, letterSpacing: 0.3, padding: "4px 9px", borderRadius: 999, background: "#e8f5e8", border: "1px solid #88cc88", color: "#2a6a2a" }}>{d.name}{ex.pairing && ex.pairing !== "—" ? ` · ${ex.pairing}` : ""}</span>;
+                })}
+              </div>
+            ) : <div style={{ fontFamily: FONT, fontSize: 11, color: "#777" }}>No extra notes</div>}
           </div>
         );
       })}
+      </div>
     </>
   );
 
@@ -1386,13 +1376,14 @@ function DisplayBoard({ tables, dishes }) {
 
           return (
             <div key={t.id} style={{
-              background: isSeated ? "#f8fcf9" : "#fff", borderRadius: 4,
-              border: `1px solid ${isSeated ? "#9bd0aa" : "#ebebeb"}`,
+              background: isSeated ? "#f8fcf9" : "#fbfcfe", borderRadius: 10,
+              border: `1px solid ${isSeated ? "#9bd0aa" : "#d9e5f2"}`,
               marginBottom: 10,
-              boxShadow: isOpen ? "0 2px 16px rgba(0,0,0,0.07)" : "none",
+              boxShadow: isOpen ? "0 8px 24px rgba(0,0,0,0.08)" : "0 1px 0 rgba(0,0,0,0.02)",
               transition: "box-shadow 0.15s",
               overflow: "hidden",
             }}>
+              <div style={{ height: 4, background: isSeated ? "#7bc492" : "#7faedb" }} />
               {/* ── Tap row ── */}
               <div onClick={() => setExp(isOpen ? null : t.id)} style={{
                 padding: "16px 16px",
@@ -1430,7 +1421,7 @@ function DisplayBoard({ tables, dishes }) {
 
                 {/* Right: badges + chevron */}
                 <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                  {<span style={statusPill(isSeated, isSeated ? "LIVE" : "RESERVED")}>{isSeated ? "LIVE" : "RESERVED"}</span>}
+                  <span style={statusPill(isSeated, isSeated ? "SEATED" : "RESERVED")}>{isSeated ? "SEATED" : "RESERVED"}</span>
                   {t.birthday && <span style={{ fontSize: 14 }}>🎂</span>}
                   {t.menuType && <span style={{ fontFamily: FONT, fontSize: 8, color: "#1a1a1a", border: "1px solid #e8e8e8", borderRadius: 2, padding: "3px 6px" }}>{t.menuType}</span>}
                   {hasRestr   && <span style={{ fontSize: 14 }}>⚠️</span>}
@@ -1528,7 +1519,7 @@ function DisplayBoard({ tables, dishes }) {
                   <span style={{ fontFamily: FONT, fontSize: 10, color: "#4a9a6a", fontWeight: 500 }}>arr. {t.arrivedAt}</span>
                 )}
                 {!isSeated && (
-                  <span style={{ fontFamily: FONT, fontSize: 9, color: "#666", letterSpacing: 1 }}>PENDING</span>
+                  <span style={{ fontFamily: FONT, fontSize: 8, color: "#2f5f8a", border: "1px solid #c6d7ea", background: "#eef5fb", borderRadius: 2, padding: "2px 5px", fontWeight: 600, letterSpacing: 1 }}>RESERVED</span>
                 )}
               </div>
             </div>
@@ -1585,7 +1576,7 @@ function LoginScreen({ onEnter }) {
 
   const MODES = [
     { id: "display", label: "Display",  sub: "Read-only view",        locked: false },
-    { id: "service", label: "Service",  sub: "Seat & service inputs", locked: true  },
+    { id: "service", label: "Service",  sub: "Seat & service inputs", locked: false },
     { id: "admin",   label: "Admin",    sub: "Full access",           locked: true  },
   ];
 
