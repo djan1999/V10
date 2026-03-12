@@ -1,36 +1,24 @@
-create table if not exists public.board_state (
-  id text primary key,
-  state jsonb not null,
-  updated_at timestamptz not null default now()
-);
+:root {
+  color-scheme: light;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
-alter table public.board_state enable row level security;
+html, body, #root {
+  margin: 0;
+  min-height: 100%;
+  width: 100%;
+}
 
-drop policy if exists "board_state_read" on public.board_state;
-create policy "board_state_read"
-on public.board_state
-for select
-to anon, authenticated
-using (true);
+body {
+  background: #fff;
+  overflow-x: hidden;
+}
 
-drop policy if exists "board_state_write" on public.board_state;
-create policy "board_state_write"
-on public.board_state
-for insert
-to anon, authenticated
-with check (true);
+button, input, select, textarea {
+  font: inherit;
+}
 
-drop policy if exists "board_state_update" on public.board_state;
-create policy "board_state_update"
-on public.board_state
-for update
-to anon, authenticated
-using (true)
-with check (true);
-
-insert into public.board_state (id, state)
-values ('main', '{}'::jsonb)
-on conflict (id) do nothing;
-
--- Realtime
-alter publication supabase_realtime add table public.board_state;
+body { color: #1a1a1a; background: #fff; }
